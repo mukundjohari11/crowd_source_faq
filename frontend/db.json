@@ -1,0 +1,122 @@
+{
+  "users": [
+    {
+      "id": "u1780595165271lgs",
+      "email": "riya@gmail.com",
+      "passwordHash": "$2b$10$aZkrXcD3yGCsdC7zvPaKpe7wMw1MVww1Y8mD7ZFKOitOJ.obwAHIu",
+      "name": "riya ",
+      "title": "Undergraduate Scholar",
+      "avatar": "https://api.dicebear.com/7.x/pixel-art/svg?seed=riya%20",
+      "bio": "Honorable scholar of the forum.",
+      "bookmarks": []
+    }
+  ],
+  "posts": [
+    {
+      "id": "lit-review-structure",
+      "category": "RESEARCH",
+      "title": "How do I structure a literature review for a technical stipend application?",
+      "timestamp": "2 days ago",
+      "author": {
+        "id": "arnab_chatterjee",
+        "name": "Senior Research Advisor",
+        "title": "Senior Research Mentor",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120"
+      },
+      "intro": "The literature review is more than just a list of references. It serves as the intellectual foundation of your entire proposal, signaling to reviewers that you are addressing a real gap in current state-of-the-art methodology.",
+      "structuredApproach": {
+        "title": "The Structured Approach",
+        "description": "When applying for a technical stipend at Vicharanashala, the literature review isn't just a list of books you've read. It's a strategic demonstration of your understanding of the current technological gap.",
+        "bullets": [
+          {
+            "title": "The Landscape Survey",
+            "content": "Identify the 5-7 core papers or projects that define your field of interest. Don't just summarize; contrast their methodologies."
+          },
+          {
+            "title": "The Critical Gap",
+            "content": "This is the most important part. Explicitly state what is missing or suboptimal in the current body of work."
+          },
+          {
+            "title": "Alignment",
+            "content": "Explain how your proposed project directly addresses this gap."
+          }
+        ],
+        "proTip": "Use a thematic organization rather than a chronological one. This shows you have synthesized information rather than just recorded it."
+      },
+      "image": "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=800",
+      "imageAlt": "A clean, minimalist high-tech workspace",
+      "upvotes": 0,
+      "views": "48",
+      "commentsCount": 2,
+      "comments": [
+        {
+          "id": "c1",
+          "authorName": "Riya Sharma",
+          "authorTitle": "Undergraduate Fellow",
+          "authorAvatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120",
+          "content": "This is exactly what I needed. I was struggling with the 'Critical Gap' section. Does this apply to PhD stipends as well?",
+          "timestamp": "5h ago",
+          "likes": 24,
+          "replies": [
+            {
+              "id": "c1-r1",
+              "authorName": "Senior Research Advisor",
+              "authorTitle": "Senior Research Mentor",
+              "authorAvatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
+              "content": "Yes, Riya. In fact, for PhD levels, the gap should be even more granular. You should ideally cite a specific limitation in a recent top-tier conference paper.",
+              "timestamp": "3h ago",
+              "likes": 12
+            }
+          ]
+        }
+      ],
+      "relatedQuestions": [
+        "cgpa-requirements",
+        "find-mentor"
+      ],
+      "upvotedBy": [],
+      "downvotedBy": []
+    },
+    {
+      "id": "cgpa-requirements",
+      "category": "STIPENDS",
+      "title": "Minimum CGPA required for the Research Excellence Stipend?",
+      "timestamp": "4 days ago",
+      "author": {
+        "id": "admin_sys",
+        "name": "Academic Office",
+        "title": "Registrar & Funding Cell",
+        "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=120"
+      },
+      "intro": "The Research Excellence Stipend targets top academic achievers who are also working on high-impact engineering projects.",
+      "structuredApproach": {
+        "title": "The Eligibility Matrix",
+        "description": "Review the minimum academic benchmarks and flexible waivers that are considered for application selection:",
+        "bullets": [
+          {
+            "title": "Primary Cutoff",
+            "content": "A minimum CGPA of 8.5/10 is generally expected for undergraduate students, and 8.0/10 for postgraduate candidates."
+          },
+          {
+            "title": "Special Waivers",
+            "content": "If you have an accepted paper at a Tier-1 conference or a significant contribution to a major open source library, the CGPA threshold is waived to 7.5."
+          }
+        ],
+        "proTip": "If your CGPA is between 7.5 and 8.5, ensure your letters of recommendation and repository codebase links are prominent."
+      },
+      "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800",
+      "imageAlt": "Data science dashboard",
+      "upvotes": -1,
+      "views": "12",
+      "commentsCount": 0,
+      "comments": [],
+      "relatedQuestions": [
+        "lit-review-structure"
+      ],
+      "upvotedBy": [],
+      "downvotedBy": [
+        "u1780594097126dhf"
+      ]
+    }
+  ]
+}

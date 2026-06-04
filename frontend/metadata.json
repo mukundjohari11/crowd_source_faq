@@ -1,0 +1,6 @@
+{
+  "name": "Vicharanashala",
+  "description": "A scholarly FAQ and question-answering community platform for stipend applications, research methodologies, and academic mentorship. Connects users with AI advice and mentors.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
