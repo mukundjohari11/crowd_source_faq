@@ -11,4 +11,3 @@ POST   | /api/answers/:id/accept
 GET    | /api/faqs
 GET    | /api/faqs/search
 POST   | /api/ai/ask
-GET    | /api/stats
