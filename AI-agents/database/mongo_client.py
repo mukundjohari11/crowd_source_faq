@@ -19,22 +19,31 @@ class MongoClient:
 
     async def connect(self) -> None:
         """Open connection to MongoDB Atlas."""
-        import certifi
-
         settings = get_settings()
+
+        connect_kwargs: dict = {}
+        try:
+            import certifi
+            connect_kwargs["tlsCAFile"] = certifi.where()
+        except ImportError:
+            logger.warning("certifi not installed — TLS CA file not set")
+
         self._client = AsyncIOMotorClient(
             settings.mongodb_uri,
-            tlsCAFile=certifi.where(),
+            **connect_kwargs,
         )
         self._db = self._client[settings.mongodb_db_name]
 
         # Verify connectivity
-        await self._client.admin.command("ping")
-        logger.info(
-            "Connected to MongoDB at %s (db=%s)",
-            settings.mongodb_uri,
-            settings.mongodb_db_name,
-        )
+        try:
+            await self._client.admin.command("ping")
+            logger.info(
+                "Connected to MongoDB at %s (db=%s)",
+                settings.mongodb_uri,
+                settings.mongodb_db_name,
+            )
+        except Exception as exc:
+            logger.warning("MongoDB ping failed (service may still work): %s", exc)
 
     async def close(self) -> None:
         """Close the MongoDB connection."""

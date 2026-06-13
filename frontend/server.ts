@@ -559,6 +559,8 @@ async function startServer() {
 
   // ==================== CHATBOT DISCUSSIONS ENDPOINT ====================
 
+  const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+
   app.post('/api/chat', async (req, res) => {
     try {
       const { prompt, context } = req.body;
@@ -566,49 +568,178 @@ async function startServer() {
         return res.status(400).json({ error: 'Prompt is required' });
       }
 
-      const client = getGeminiClient();
+      // ── Try AI-agents service first (RAG-powered via LangGraph + Groq) ──
+      try {
+        const aiResponse = await fetch(`${AI_SERVICE_URL}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: prompt }),
+          signal: AbortSignal.timeout(30000), // 30s timeout
+        });
 
-      const systemInstruction = `
-        You are "Vicharanashala AI Advisor" - an intelligent, high-fidelity academic mentor and stipend consultant on the Vicharanashala forum.
-        You possess deep academic knowledge of:
-        - Literature reviews & technical proposal structures.
-        - Research stipend applications, academic CGPA eligibility, and wavers.
-        - Open Source contributions (GitHub, open source methodology, engineering standards).
-        - Finding prospective academic mentors.
-        - Drafting high-intent Statements of Purpose (SOP).
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          // Format the response with source attribution
+          let text = aiData.answer || 'No answer generated.';
 
-        Respond in a helpful, structured, polished academic tone. Use markdown list items, bold headings, code highlights, and concise language.
-        Always align your advice with the spirit of the custom design theme of Vicharanashala (scholarly, focus-centric, developer-supportive).
-        If the user provides a context about a specific forum FAQ, use that context to make your advice extremely tailored.
-      `;
+          // Append source info if available
+          if (aiData.sources && aiData.sources.length > 0) {
+            text += '\n\n---\n📚 **Sources:** ';
+            text += aiData.sources
+              .map((s: any) => `[${s.source_type}]`)
+              .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i)
+              .join(', ');
+          }
 
-      const contents = context 
-        ? `Forum FAQ Context: ${JSON.stringify(context)}\n\nUser Question: ${prompt}`
-        : prompt;
+          if (aiData.confidence !== undefined) {
+            text += `\n🎯 **Confidence:** ${(aiData.confidence * 100).toFixed(0)}%`;
+          }
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: contents,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
+          return res.json({ text, source: 'ai_agents', confidence: aiData.confidence });
+        }
+        console.warn('AI-agents service returned non-OK status:', aiResponse.status);
+      } catch (aiErr: any) {
+        console.warn('AI-agents service unavailable, falling back to Gemini:', aiErr.message);
+      }
+
+      // ── Fallback to Gemini if AI-agents is unavailable ──
+      try {
+        const client = getGeminiClient();
+
+        const systemInstruction = `
+          You are "Vicharanashala AI Advisor" - an intelligent, high-fidelity academic mentor and stipend consultant on the Vicharanashala forum.
+          You possess deep academic knowledge of:
+          - Literature reviews & technical proposal structures.
+          - Research stipend applications, academic CGPA eligibility, and wavers.
+          - Open Source contributions (GitHub, open source methodology, engineering standards).
+          - Finding prospective academic mentors.
+          - Drafting high-intent Statements of Purpose (SOP).
+
+          Respond in a helpful, structured, polished academic tone. Use markdown list items, bold headings, code highlights, and concise language.
+          Always align your advice with the spirit of the custom design theme of Vicharanashala (scholarly, focus-centric, developer-supportive).
+          If the user provides a context about a specific forum FAQ, use that context to make your advice extremely tailored.
+        `;
+
+        const contents = context 
+          ? `Forum FAQ Context: ${JSON.stringify(context)}\n\nUser Question: ${prompt}`
+          : prompt;
+
+        const response = await client.models.generateContent({
+          model: 'gemini-3.5-flash',
+          contents: contents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+          },
+        });
+
+        return res.json({ text: response.text, source: 'gemini' });
+      } catch (geminiErr: any) {
+        console.error('Gemini fallback also failed:', geminiErr.message);
+      }
+
+      // ── Both services unavailable ──
+      res.status(503).json({ 
+        error: 'Both AI services are unavailable',
+        details: 'Ensure AI-agents service (port 8000) is running, or configure GEMINI_API_KEY.'
       });
-
-      res.json({ text: response.text });
     } catch (error: any) {
-      console.error('Gemini API Error:', error);
+      console.error('Chat endpoint error:', error);
       res.status(500).json({ 
-        error: error.message || 'Failed to generate response from Vicharanashala AI',
-        details: 'Check if GEMINI_API_KEY is configured in Settings > Secrets or if the service is online.'
+        error: error.message || 'Failed to generate response from Vicharanashala AI'
       });
     }
   });
 
-  app.get('/api/health', (req, res) => {
+  // ==================== AI-AGENTS PROXY ENDPOINTS ====================
+
+  // Upload FAQ CSV to AI-agents service
+  app.post('/api/ai/upload-faq', async (req: any, res) => {
+    try {
+      // For file uploads, we need to pipe the request directly
+      const response = await fetch(`${AI_SERVICE_URL}/upload-faq`, {
+        method: 'POST',
+        headers: {
+          ...Object.fromEntries(
+            Object.entries(req.headers)
+              .filter(([k]) => k.startsWith('content-'))
+          )
+        },
+        body: req, // pipe the raw request
+        // @ts-ignore
+        duplex: 'half'
+      });
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error: any) {
+      console.error('Upload FAQ proxy error:', error);
+      res.status(502).json({ error: 'Cannot reach AI agents service' });
+    }
+  });
+
+  // Upload PDF to AI-agents service
+  app.post('/api/ai/upload-pdf', async (req: any, res) => {
+    try {
+      const response = await fetch(`${AI_SERVICE_URL}/upload-pdf`, {
+        method: 'POST',
+        headers: {
+          ...Object.fromEntries(
+            Object.entries(req.headers)
+              .filter(([k]) => k.startsWith('content-'))
+          )
+        },
+        body: req,
+        // @ts-ignore
+        duplex: 'half'
+      });
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error: any) {
+      console.error('Upload PDF proxy error:', error);
+      res.status(502).json({ error: 'Cannot reach AI agents service' });
+    }
+  });
+
+  // Get unanswered questions from AI-agents
+  app.get('/api/ai/unanswered', async (req, res) => {
+    try {
+      const limit = req.query.limit || 50;
+      const skip = req.query.skip || 0;
+      const response = await fetch(`${AI_SERVICE_URL}/unanswered-questions?limit=${limit}&skip=${skip}`);
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error: any) {
+      console.error('Unanswered proxy error:', error);
+      res.status(502).json({ error: 'Cannot reach AI agents service' });
+    }
+  });
+
+  // AI-agents health check
+  app.get('/api/ai/health', async (req, res) => {
+    try {
+      const response = await fetch(`${AI_SERVICE_URL}/health`);
+      const data = await response.json();
+      res.json({ frontend: 'healthy', ai_service: data, ai_service_url: AI_SERVICE_URL });
+    } catch (error: any) {
+      res.json({ frontend: 'healthy', ai_service: { status: 'unreachable', error: error.message }, ai_service_url: AI_SERVICE_URL });
+    }
+  });
+
+  app.get('/api/health', async (req, res) => {
+    let aiStatus = 'unknown';
+    try {
+      const aiRes = await fetch(`${AI_SERVICE_URL}/health`, { signal: AbortSignal.timeout(3000) });
+      if (aiRes.ok) aiStatus = 'connected';
+      else aiStatus = 'error';
+    } catch {
+      aiStatus = 'unreachable';
+    }
+
     res.json({ 
       status: 'ok', 
       dbActive: db.isMongoActive() ? 'mongodb_atlas' : 'local_json_db',
+      aiService: aiStatus,
+      aiServiceUrl: AI_SERVICE_URL,
       time: new Date().toISOString() 
     });
   });

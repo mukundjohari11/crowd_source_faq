@@ -1,22 +1,32 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const connectDB = require("./config/db");
 
 dotenv.config();
 connectDB();
+
 const app = express();
-app.use(express.json());
 
+// ── Middleware ──────────────────────────────────────────────────
+app.use(cors({
+    origin: ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+app.use(express.json({ limit: "10mb" }));
 
+// ── Health check ───────────────────────────────────────────────
 app.get("/", (req, res) => {
-    res.send("Backend Running");
+    res.json({
+        status: "ok",
+        service: "vicharanashala-backend",
+        time: new Date().toISOString()
+    });
 });
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// ── Routes ─────────────────────────────────────────────────────
 
 // Auth routes
 const authRoutes = require("./routes/authRoutes");
@@ -34,7 +44,7 @@ app.use("/api", answerRoutes);
 const faqRoutes = require("./routes/faqRoutes");
 app.use("/api/faqs", faqRoutes);
 
-// AI routes
+// AI routes (proxy to AI-agents service)
 const aiRoutes = require("./routes/aiRoutes");
 app.use("/api/ai", aiRoutes);
 
@@ -47,4 +57,8 @@ app.get("/api/protected", protect, (req, res) => {
     });
 });
 
-
+// ── Start Server ───────────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Vicharanashala Backend running on port ${PORT}`);
+});

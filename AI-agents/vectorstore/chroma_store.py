@@ -15,11 +15,23 @@ class ChromaStore:
 
     def __init__(self) -> None:
         settings = get_settings()
-        self._client = chromadb.CloudClient(
-            tenant=settings.chroma_tenant,
-            database=settings.chroma_database,
-            api_key=settings.chroma_api_key,
-        )
+
+        # Use CloudClient if credentials are provided, otherwise fall back to local persistent
+        if settings.chroma_api_key and settings.chroma_tenant and settings.chroma_database:
+            self._client = chromadb.CloudClient(
+                tenant=settings.chroma_tenant,
+                database=settings.chroma_database,
+                api_key=settings.chroma_api_key,
+            )
+            logger.info(
+                "ChromaStore initialized — Cloud (tenant=%s, db=%s)",
+                settings.chroma_tenant,
+                settings.chroma_database,
+            )
+        else:
+            self._client = chromadb.PersistentClient(path="./chroma_data")
+            logger.info("ChromaStore initialized — Local persistent (./chroma_data)")
+
         self._faq_collection = self._client.get_or_create_collection(
             name=settings.chroma_faq_collection,
             metadata={"hnsw:space": "cosine"},
@@ -29,9 +41,7 @@ class ChromaStore:
             metadata={"hnsw:space": "cosine"},
         )
         logger.info(
-            "ChromaStore initialized — Cloud (tenant=%s, db=%s, faq=%s, doc=%s)",
-            settings.chroma_tenant,
-            settings.chroma_database,
+            "ChromaStore collections: faq=%s, doc=%s",
             settings.chroma_faq_collection,
             settings.chroma_doc_collection,
         )

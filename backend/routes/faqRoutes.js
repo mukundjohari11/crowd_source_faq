@@ -11,7 +11,7 @@ const {
     searchFAQs
 } = require("../controllers/faqController");
 
-router.post("/", createFAQ, protect, adminOnly);
+router.post("/", protect, adminOnly, createFAQ);
 router.get("/", getFAQs);
 router.get("/search", searchFAQs);
 router.get("/:id", getFAQById);

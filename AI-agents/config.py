@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     )
 
     # --- API Keys ---
-    groq_api_key: str
+    groq_api_key: str = ""
 
     # --- MongoDB Atlas ---
     mongodb_uri: str = "mongodb+srv://localhost:27017"
